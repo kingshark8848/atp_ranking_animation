@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style type="text/css">
+        .flip-list-item {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .flip-list-move {
+            transition: transform 0.5s;
+        }
+
+        .flip-list-enter-active, .flip-list-leave-active {
+            transition: all 0.5s;
+        }
+
+        .flip-list-enter, .flip-list-leave-to {
+            opacity: 0.2;
+            transform: translateX(30px);
+        }
+    </style>
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
+            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.14.1/lodash.min.js"></script>
+    <script src="https://unpkg.com/tween.js@16.3.4"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+
+<!-- <svg width="300" height="20">
+  <rect width="300" height="20" style="fill:rgb(0,0,255);" />
+</svg>
+helo
+<br/>
+
+<svg width="300" height="20">
+  <rect width="300" height="20" style="fill:rgb(0,0,255);" />
+</svg>
+helo
+<br/> -->
+
+<div id="flip-list-demo" class="container">
+    <div class="row">
+        <div class="col-xs-12">
+            <!-- <button v-on:click="shuffle">Shuffle</button> -->
+            <button type="button" class="btn btn-default" v-on:click="testCC">Test Change Element</button>
+            <button type="button" class="btn btn-default" v-on:click="testTimeLine">Test Time Line</button>
+            <button type="button" class="btn btn-default" v-on:click="testReplace">Test Replace Element</button>
+            <!-- <input v-model.number="items[0].name" type="number" step="20"> -->
+            <br/><br/>
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="col-xs-1 text-center">
+            <div v-for="item,key in animate_items" class="row">
+                <svg :width=0 height="20">
+                </svg>
+                {{++key}}
+            </div>
+        </div>
+        <div class="col-xs-10">
+            <transition-group name="flip-list" tag="div">
+                <div v-for="item in animate_items" v-bind:key="item.key" class="row">
+
+                    <svg :width="item[ranking_attr]" height="20">
+                        <rect :width="item[ranking_attr]" height="20" :style="{fill:item.bar_color}"/>
+                        <!-- <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle">{{item.name}}</text> -->
+                    </svg>
+
+                    <svg :width=50 height="20">
+                        <rect :width=50 height="20" style="fill:rgb(255,255,255);fill-opacity:0;"/>
+                        <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle">
+                            {{item[ranking_attr]}}...{{item.key}}
+                        </text>
+                    </svg>
+
+
+                </div>
+            </transition-group>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    new Vue({
+        el: '#flip-list-demo',
+        data: {
+            items: [],
+            old_items: [],
+            animate_items: [],
+            ranking_attr: "",
+        },
+        mounted() {
+            items = [
+                {key: 1, goal: 80},
+                {key: 2, goal: 70},
+                {key: 3, goal: 60},
+                {key: 4, goal: 50},
+                {key: 5, goal: 40},
+                {key: 6, goal: 30},
+                {key: 7, goal: 20},
+                {key: 8, goal: 10},
+            ];
+
+            this.ranking_attr = "goal";
+
+            this.items = this.setupItemExtraInfo(items);
+
+            // test: log items
+            console.log(this.items);
+
+            this.setValue();
+        },
+        created() {
+
+        },
+        watch: {
+            items: {
+                handler: function (after, before) {
+                    let vm = this;
+                    // Log it
+                    vm.setValue();
+                    // console.log(changed)
+                },
+                deep: true,
+            }
+        },
+        methods: {
+            setupItemExtraInfo: function (items) {
+                // init bar color
+                items = _.map(items, function(e) {
+                    return _.extend({}, e, {bar_color: "blue"});
+                });
+
+                return items;
+            },
+
+            getIndexOfRecordByKey: function (key, record) {
+                return _.findIndex(record, function (o) {
+                    return o.key === key;
+                });
+            },
+
+            setValue: function () {
+                this.$data.old_items = _.cloneDeep(this.$data.items);
+                this.$data.animate_items = _.cloneDeep(this.$data.items);
+            },
+            shuffle: function () {
+                this.items = _.shuffle(this.items)
+            },
+
+            updateItemWithAnimation: function (new_item, completed_callback) {
+
+                let key = new_item.key;
+
+                let vm = this;
+                let index = vm.getIndexOfRecordByKey(key, vm.items);
+
+                if (index === -1) {
+//                    console.log(key);
+                    // not in old item.
+                    completed_callback(-1);
+                    return
+                }
+
+                if (vm.items[index][vm.ranking_attr]===new_item[vm.ranking_attr]){
+                    // value not changed
+//                    console.log(key);
+                    completed_callback(0);
+                    return;
+                }
+
+                // when update start, change bar color to red temp.
+                let old_color = new_item.bar_color;
+                new_item.bar_color = "red";
+
+                // setup tween
+                new TWEEN.Tween({tweeningNumber: vm.old_items[index][vm.ranking_attr]})
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .to({tweeningNumber: new_item[vm.ranking_attr]}, 500)
+                    .onUpdate(function () {
+
+                        let tmp = this.tweeningNumber.toFixed(0);
+                        // console.log(tmp);
+                        let mid_item = _.cloneDeep(new_item);
+                        mid_item[vm.ranking_attr] = tmp;
+                        vm.$set(vm.animate_items, index, mid_item)
+
+                    })
+                    .start()
+                    .onComplete(function () {
+                        // when animation is over, recover bar color
+                        new_item.bar_color = old_color;
+
+                        // SET NEW VALUE
+//                        console.log(key);
+                        vm.$set(vm.items, index, new_item); // need to be here not outside the new TWEEN structure cuz ansync reason.
+                        completed_callback(1);
+                    });
+
+                // define animation function
+                function animate(time) {
+
+                    requestAnimationFrame(animate);
+                    TWEEN.update(time)
+                }
+
+                // begin to do value updating animation
+                animate();
+
+            },
+
+            replaceEntireItems: function (new_items, callback) {
+                let vm = this;
+
+                tmp_items = new_items;
+
+                // update
+                let updated_count = 0;
+                for (let i = 0; i < new_items.length; i++) {
+                    vm.updateItemWithAnimation(new_items[i], function (result) {
+                        updated_count++;
+
+                        if (updated_count>=new_items.length){
+                            // move
+                            vm.items = _.orderBy(tmp_items, [vm.ranking_attr], ['desc']); // set value, trigger list move,enter,leave event
+                            typeof callback === 'function' && callback(0);
+                        }
+
+                    })
+                }
+
+            },
+
+            testCC: function () {
+                let vm = this;
+
+                let new_items = _.cloneDeep(this.items);
+                let newVal = 0;
+                for (let i = 0; i < this.items.length; i++) {
+                    newVal = _.random(0, 200);
+
+//                    let new_item = _.cloneDeep(this.items[i]); // use cloneDeep, or there will not be smooth!!!!!
+                    new_items[i][vm.ranking_attr] = newVal;
+                }
+
+                vm.replaceEntireItems(new_items);
+
+
+            },
+
+            testTimeLine: function () {
+
+                let vm = this;
+                function oneRound(count,end){
+                    console.log(count);
+                    console.log(end);
+                    console.log("====");
+
+                    if (count>=end){
+                        return
+                    }
+
+                    let new_items = _.cloneDeep(vm.items);
+                    let newVal = 0;
+                    for (let i = 0; i < vm.items.length; i++) {
+                        newVal = _.random(0, 200);
+
+//                    let new_item = _.cloneDeep(this.items[i]); // use cloneDeep, or there will not be smooth!!!!!
+                        new_items[i][vm.ranking_attr] = newVal;
+                    }
+
+                    vm.replaceEntireItems(new_items);
+
+                    setTimeout(function () {
+                        oneRound(++count, end);
+                    }, 2000);
+                }
+
+                oneRound(0,10);
+
+            },
+
+            testReplace: function () {
+                // this.items.splice(_.random(0,7), 1)
+                test_items = [
+                    {key: 1, goal: 80},
+                    {key: 2, goal: 70},
+                    {key: 3, goal: 100},
+                    {key: 4, goal: 50},
+                    {key: 9, goal: 120},
+                    {key: 13, goal: 30},
+                    {key: 7, goal: 20},
+                    {key: 8, goal: 75},
+                    {key: 11, goal: 32},
+                ];
+
+                test_items = this.setupItemExtraInfo(test_items);
+
+                this.replaceEntireItems(test_items);
+            }
+
+        }
+    })
+
+</script>
+
+
+</body>
+</html>
