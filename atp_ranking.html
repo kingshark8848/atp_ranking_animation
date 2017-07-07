@@ -62,6 +62,22 @@ helo
         </div>
 
     </div>
+
+    <!--timeline info box-->
+    <div class="row">
+        <div class="col-xs-6">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Info</h3>
+                </div>
+                <div class="panel-body">
+                    Date: {{my_date}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--ranking box-->
     <div class="row">
         <div class="col-xs-1 text-center">
             <div v-for="item,key in animate_items" class="row">
@@ -106,6 +122,8 @@ helo
         el: '#flip-list-demo',
         data: {
             his_items: [],
+
+            my_date: "",
             items: [],
             old_items: [],
             animate_items: [],
@@ -118,12 +136,15 @@ helo
             $.getJSON("his_data.json", function(json) {
                 vm.his_items = json;
 
-                items = vm.his_items['2017-06-26'];
+                let rec = _.minBy(vm.his_items, function(o) {
+                    return new Date(o.date);
+                });
+
+                vm.my_date = rec.date;
+                vm.items = vm.setupItemExtraInfo(rec.stats);
 
                 vm.ranking_attr = "score";
                 vm.score_zoom = 0.05;
-
-                vm.items = vm.setupItemExtraInfo(items);
 
                 // test: log items
                 console.log(this.items);

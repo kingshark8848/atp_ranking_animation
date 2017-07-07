@@ -60,7 +60,7 @@ def get_history_atp_rankings(since="2017-01-01", date_file=None, save_file="his_
 			date_list = json.load(fp)
 
 	# init his data
-	his_data = {}
+	his_data = []
 
 	# sort date desc
 	date_list.sort(key=lambda x: datetime.strptime(x, '%Y-%m-%d'), reverse=True)
@@ -72,7 +72,7 @@ def get_history_atp_rankings(since="2017-01-01", date_file=None, save_file="his_
 			break
 
 		print(my_date)
-		his_data[my_date] = get_atp_ranking(my_date)
+		his_data.append({"date": my_date, "stats": get_atp_ranking(my_date)})
 
 	# save data
 	if save_file:
