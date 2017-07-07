@@ -122,6 +122,7 @@ helo
     new Vue({
         el: '#flip-list-demo',
         data: {
+            country_data: {},
             his_items: [],
 
             my_date: "",
@@ -134,25 +135,43 @@ helo
         mounted() {
             let vm = this;
 
-            $.getJSON("his_data.json", function(json) {
-                vm.ranking_attr = "score";
-                vm.score_zoom = 0.03;
+            $.ajaxSetup({
+                async: false
+            });
 
-//                vm.his_items = _.orderBy(json, [vm.date], ['asc']);
+            // get history data
+            $.getJSON("his_data.json", function(json) {
+
                 vm.his_items = _.sortBy(json, [function(o) {
                     return new Date(o.date);
                 }]);
 
-                // get init items
-                let rec = vm.his_items[0];
-                vm.my_date = rec.date;
-                vm.items = vm.setupItemExtraInfo(rec.stats);
-
-                // test: log items
-                console.log(vm.items);
-
-                vm.setValue();
             });
+
+            // get country data
+            $.getJSON("country.json", function(json) {
+
+                vm.country_data = json;
+
+            });
+
+            $.ajaxSetup({
+                async: true
+            });
+
+            // set config
+            vm.ranking_attr = "score";
+            vm.score_zoom = 0.03;
+
+            // get init items
+            let rec = vm.his_items[0];
+            vm.my_date = rec.date;
+            vm.items = vm.setupItemExtraInfo(rec.stats);
+
+            // test: log items
+            console.log(vm.items);
+
+            vm.setValue();
 
         },
         created() {
@@ -171,26 +190,16 @@ helo
         },
         methods: {
             setupItemExtraInfo: function (items) {
+                let vm = this;
+
                 // init bar color
                 items = _.map(items, function(e) {
                     return _.extend({}, e, {bar_color: "blue"});
                 });
 
-                $.ajaxSetup({
-                    async: false
-                });
-
-                $.getJSON("country.json", function(json) {
-
-                    items = _.map(items, function(e) {
-                        let country_data = json[e.country];
-                        return _.extend({}, e, {flag_img: country_data? json[e.country].flag_img: "" });
-                    });
-
-                });
-
-                $.ajaxSetup({
-                    async: true
+                items = _.map(items, function(e) {
+                    let country_data = vm.country_data[e.country];
+                    return _.extend({}, e, {flag_img: country_data? country_data.flag_img: "" });
                 });
 
                 return items;
@@ -204,8 +213,10 @@ helo
             },
 
             setValue: function () {
-                this.$data.old_items = _.cloneDeep(this.$data.items);
-                this.$data.animate_items = _.cloneDeep(this.$data.items);
+//                this.$data.old_items = _.cloneDeep(this.$data.items);
+//                this.$data.animate_items = _.cloneDeep(this.$data.items);
+                this.$data.old_items = this.$data.items;
+                this.$data.animate_items = this.$data.items;
             },
             shuffle: function () {
                 this.items = _.shuffle(this.items)
@@ -237,15 +248,12 @@ helo
                 new_item.bar_color = "red";
 
                 // setup tween
+                let mid_item = _.cloneDeep(new_item);
                 new TWEEN.Tween({tweeningNumber: vm.old_items[index][vm.ranking_attr]})
                     .easing(TWEEN.Easing.Quadratic.Out)
                     .to({tweeningNumber: new_item[vm.ranking_attr]}, 500)
                     .onUpdate(function () {
-
-                        let tmp = this.tweeningNumber.toFixed(0);
-                        // console.log(tmp);
-                        let mid_item = _.cloneDeep(new_item);
-                        mid_item[vm.ranking_attr] = tmp;
+                        mid_item[vm.ranking_attr] = this.tweeningNumber.toFixed(0);
                         vm.$set(vm.animate_items, index, mid_item)
 
                     })
@@ -256,8 +264,9 @@ helo
 
                         // SET NEW VALUE
 //                        console.log(key);
-                        vm.$set(vm.items, index, new_item); // need to be here not outside the new TWEEN structure cuz ansync reason.
+//                        vm.$set(vm.items, index, new_item); // need to be here not outside the new TWEEN structure cuz ansync reason.
                         completed_callback(1);
+
                     });
 
                 // define animation function
@@ -275,7 +284,7 @@ helo
             replaceEntireItems: function (new_items, callback) {
                 let vm = this;
 
-                tmp_items = new_items;
+                let tmp_items = new_items;
 
                 // update
                 let updated_count = 0;
@@ -297,17 +306,34 @@ helo
             historyRankingAnimation(){
                 let vm = this;
 
+                for (let i = 0; i < vm.his_items.length; i++) {
+                    (function(i) {
+                        setTimeout(function() {
+                            // get new items
+//                            let rec = _.cloneDeep(vm.his_items[i]);
+                            let rec = vm.his_items[i];
+                            vm.my_date = rec.date;
+                            let new_items = vm.setupItemExtraInfo(rec.stats);
+
+                            vm.replaceEntireItems(new_items);
+
+                        }, 2000*i);
+                    })(i);
+                }
+
+            },
+
+            historyRankingAnimation_v2(){
+                let vm = this;
+
                 function oneRound(cur_index,end_index){
-                    console.log(cur_index);
-                    console.log(end_index);
-                    console.log("====");
 
                     if (cur_index>end_index){
                         return
                     }
 
                     // get new items
-                    let rec = _.cloneDeep(vm.his_items[cur_index]);
+                    let rec = vm.his_items[cur_index];
                     vm.my_date = rec.date;
                     let new_items = vm.setupItemExtraInfo(rec.stats);
 
