@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
 
 <head>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"
@@ -251,7 +251,7 @@ helo
                 let mid_item = _.cloneDeep(new_item);
                 let tween = new TWEEN.Tween({tweeningNumber: parseInt(vm.old_items[index][vm.ranking_attr]) })
 //                    .easing(TWEEN.Easing.Quadratic.Out)
-                    .to({tweeningNumber: parseInt(new_item[vm.ranking_attr]) }, 200)
+                    .to({tweeningNumber: parseInt(new_item[vm.ranking_attr]) }, 500)
                     .onUpdate(function () {
                         mid_item[vm.ranking_attr] = this.tweeningNumber.toFixed(0);
                         vm.$set(vm.animate_items, index, mid_item)
