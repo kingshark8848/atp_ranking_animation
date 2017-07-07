@@ -249,9 +249,9 @@ helo
 
                 // setup tween
                 let mid_item = _.cloneDeep(new_item);
-                new TWEEN.Tween({tweeningNumber: vm.old_items[index][vm.ranking_attr]})
-                    .easing(TWEEN.Easing.Quadratic.Out)
-                    .to({tweeningNumber: new_item[vm.ranking_attr]}, 500)
+                let tween = new TWEEN.Tween({tweeningNumber: parseInt(vm.old_items[index][vm.ranking_attr]) })
+//                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .to({tweeningNumber: parseInt(new_item[vm.ranking_attr]) }, 200)
                     .onUpdate(function () {
                         mid_item[vm.ranking_attr] = this.tweeningNumber.toFixed(0);
                         vm.$set(vm.animate_items, index, mid_item)
@@ -266,14 +266,14 @@ helo
 //                        console.log(key);
 //                        vm.$set(vm.items, index, new_item); // need to be here not outside the new TWEEN structure cuz ansync reason.
                         completed_callback(1);
-
                     });
 
                 // define animation function
                 function animate(time) {
 
                     requestAnimationFrame(animate);
-                    TWEEN.update(time)
+                    TWEEN.update(time);
+                    tween = null;
                 }
 
                 // begin to do value updating animation
@@ -317,7 +317,7 @@ helo
 
                             vm.replaceEntireItems(new_items);
 
-                        }, 2000*i);
+                        }, 1500*i);
                     })(i);
                 }
 
