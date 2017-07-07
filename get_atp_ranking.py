@@ -51,13 +51,41 @@ def get_atp_ranking(v_date):
 	return data
 
 
+def get_history_atp_rankings(since="2017-01-01", date_file=None, save_file="his_data.json", is_return_data=False):
+	
+	if date_file==None:
+		date_list = get_atp_dates()
+	else:
+		with open(date_file, 'r') as fp:
+			date_list = json.load(fp)
 
-def get_history_atp_rankings(since="2000-01-01", date_file=None, save_file=None):
-	pass
+	# init his data
+	his_data = {}
 
+	# sort date desc
+	date_list.sort(key=lambda x: datetime.strptime(x, '%Y-%m-%d'), reverse=True)
+
+	for my_date in date_list:
+		
+		# check if date meet since
+		if datetime.strptime(my_date, '%Y-%m-%d')<datetime.strptime(since, '%Y-%m-%d'):
+			break
+
+		print(my_date)
+		his_data[my_date] = get_atp_ranking(my_date)
+
+	# save data
+	if save_file:
+		with open(save_file, 'w') as fp:
+			json.dump(his_data, fp)
+
+	# return
+	if is_return_data:
+		return his_data
 
 if __name__ == '__main__':
 
-	get_atp_dates('date.json')
+	get_history_atp_rankings()
+
 
 	# get_atp_ranking('2000-01-10')

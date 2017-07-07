@@ -24,8 +24,8 @@
         }
     </style>
     <script
-            src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-            integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
             crossorigin="anonymous"></script>
     <script src="https://unpkg.com/vue"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.14.1/lodash.min.js"></script>
@@ -74,15 +74,22 @@ helo
             <transition-group name="flip-list" tag="div">
                 <div v-for="item in animate_items" v-bind:key="item.key" class="row">
 
-                    <svg :width="item[ranking_attr]" height="20">
-                        <rect :width="item[ranking_attr]" height="20" :style="{fill:item.bar_color}"/>
+                    <svg :width="item[ranking_attr]*score_zoom" height="20">
+                        <rect :width="item[ranking_attr]*score_zoom" height="20" :style="{fill:item.bar_color}"/>
                         <!-- <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle">{{item.name}}</text> -->
                     </svg>
 
                     <svg :width=50 height="20">
                         <rect :width=50 height="20" style="fill:rgb(255,255,255);fill-opacity:0;"/>
                         <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle">
-                            {{item[ranking_attr]}}...{{item.key}}
+                            {{item[ranking_attr]}}
+                        </text>
+                    </svg>
+
+                    <svg height="20">
+                        <rect height="20" style="fill:rgb(255,255,255);fill-opacity:0;"/>
+                        <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle">
+                            {{item["player"]}}
                         </text>
                     </svg>
 
@@ -98,31 +105,32 @@ helo
     new Vue({
         el: '#flip-list-demo',
         data: {
+            his_items: [],
             items: [],
             old_items: [],
             animate_items: [],
             ranking_attr: "",
+            score_zoom: 1,
         },
         mounted() {
-            items = [
-                {key: 1, goal: 80},
-                {key: 2, goal: 70},
-                {key: 3, goal: 60},
-                {key: 4, goal: 50},
-                {key: 5, goal: 40},
-                {key: 6, goal: 30},
-                {key: 7, goal: 20},
-                {key: 8, goal: 10},
-            ];
+            let vm = this;
 
-            this.ranking_attr = "goal";
+            $.getJSON("his_data.json", function(json) {
+                vm.his_items = json;
 
-            this.items = this.setupItemExtraInfo(items);
+                items = vm.his_items['2017-06-26'];
 
-            // test: log items
-            console.log(this.items);
+                vm.ranking_attr = "score";
+                vm.score_zoom = 0.05;
 
-            this.setValue();
+                vm.items = vm.setupItemExtraInfo(items);
+
+                // test: log items
+                console.log(this.items);
+
+                vm.setValue();
+            });
+
         },
         created() {
 
