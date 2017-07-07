@@ -1,0 +1,12 @@
+{
+	"GBR": {"flag_img": "public/imgs/nation_flags/svg/260-united-kingdom.svg", "bg_color": "#FDFF9F"},
+	"SRB": {"flag_img": "public/imgs/nation_flags/svg/071-serbia.svg", "bg_color": "#FDFF9F"},
+	"CAN": {"flag_img": "public/imgs/nation_flags/svg/243-canada.svg", "bg_color": "#FDFF9F"},
+	"SUI": {"flag_img": "public/imgs/nation_flags/svg/205-switzerland.svg", "bg_color": "#FDFF9F"},
+	"JPN": {"flag_img": "public/imgs/nation_flags/svg/063-japan.svg", "bg_color": "#FDFF9F"},
+	"CRO": {"flag_img": "public/imgs/nation_flags/svg/164-croatia.svg", "bg_color": "#FDFF9F"},
+	"FRA": {"flag_img": "public/imgs/nation_flags/svg/195-france.svg", "bg_color": "#FDFF9F"},
+	"AUT": {"flag_img": "public/imgs/nation_flags/svg/003-austria.svg", "bg_color": "#FDFF9F"},
+	"ESP": {"flag_img": "public/imgs/nation_flags/svg/128-spain.svg", "bg_color": "#FDFF9F"},
+	"CZE": {"flag_img": "public/imgs/nation_flags/svg/149-czech-republic.svg", "bg_color": "#FDFF9F"}
+}

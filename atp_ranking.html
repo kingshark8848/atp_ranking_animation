@@ -104,9 +104,10 @@ helo
 
                     <svg height="20" width="200">
                         <rect height="20" width="200" style="fill:rgb(253,255,159);"/>
-                        <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle">
-                            {{item["player"]}}
+                        <text x="35" y="50%" alignment-baseline="middle">
+                            {{item["country"]}}, &nbsp;&nbsp;{{item["player"]}}
                         </text>
+                        <image :href="item.flag_img" x="0" y="0" height="20" width="30"/>
                     </svg>
 
 
@@ -175,7 +176,24 @@ helo
                     return _.extend({}, e, {bar_color: "blue"});
                 });
 
+                $.ajaxSetup({
+                    async: false
+                });
+
+                $.getJSON("country.json", function(json) {
+
+                    items = _.map(items, function(e) {
+                        return _.extend({}, e, {flag_img: json[e.country].flag_img});
+                    });
+
+                });
+
+                $.ajaxSetup({
+                    async: true
+                });
+
                 return items;
+
             },
 
             getIndexOfRecordByKey: function (key, record) {
@@ -295,7 +313,7 @@ helo
 
                     setTimeout(function () {
                         oneRound(++cur_index, end_index);
-                    }, 2000);
+                    }, 1500);
                 }
 
                 oneRound(0,vm.his_items.length-1);
