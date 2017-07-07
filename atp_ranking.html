@@ -134,20 +134,18 @@ helo
             let vm = this;
 
             $.getJSON("his_data.json", function(json) {
-                vm.his_items = json;
-
-                let rec = _.minBy(vm.his_items, function(o) {
-                    return new Date(o.date);
-                });
-
-                vm.my_date = rec.date;
-                vm.items = vm.setupItemExtraInfo(rec.stats);
-
                 vm.ranking_attr = "score";
                 vm.score_zoom = 0.05;
 
+                vm.his_items = _.orderBy(json, [vm.date], ['asc']);
+
+                // get init items
+                let rec = vm.his_items[0];
+                vm.my_date = rec.date;
+                vm.items = vm.setupItemExtraInfo(rec.stats);
+
                 // test: log items
-                console.log(this.items);
+                console.log(vm.items);
 
                 vm.setValue();
             });
@@ -273,6 +271,36 @@ helo
                 }
 
             },
+
+//            historyRankingAnimation(){
+//                let vm = this;
+//                function oneRound(cur_index,max_index){
+//                    console.log(count);
+//                    console.log(end);
+//                    console.log("====");
+//
+//                    if (count>=end){
+//                        return
+//                    }
+//
+//                    let new_items = _.cloneDeep(vm.items);
+//                    let newVal = 0;
+//                    for (let i = 0; i < vm.items.length; i++) {
+//                        newVal = _.random(0, 200);
+//
+////                    let new_item = _.cloneDeep(this.items[i]); // use cloneDeep, or there will not be smooth!!!!!
+//                        new_items[i][vm.ranking_attr] = newVal;
+//                    }
+//
+//                    vm.replaceEntireItems(new_items);
+//
+//                    setTimeout(function () {
+//                        oneRound(++count, end);
+//                    }, 2000);
+//                }
+//
+//                oneRound(0,10);
+//            },
 
             testCC: function () {
                 let vm = this;
