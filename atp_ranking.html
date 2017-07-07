@@ -55,7 +55,7 @@ helo
         <div class="col-xs-12">
             <!-- <button v-on:click="shuffle">Shuffle</button> -->
             <button type="button" class="btn btn-default" v-on:click="testCC">Test Change Element</button>
-            <button type="button" class="btn btn-default" v-on:click="testTimeLine">Test Time Line</button>
+            <button type="button" class="btn btn-default" v-on:click="historyRankingAnimation">History Ranking Animation</button>
             <button type="button" class="btn btn-default" v-on:click="testReplace">Test Replace Element</button>
             <!-- <input v-model.number="items[0].name" type="number" step="20"> -->
             <br/><br/>
@@ -137,7 +137,10 @@ helo
                 vm.ranking_attr = "score";
                 vm.score_zoom = 0.05;
 
-                vm.his_items = _.orderBy(json, [vm.date], ['asc']);
+//                vm.his_items = _.orderBy(json, [vm.date], ['asc']);
+                vm.his_items = _.sortBy(json, [function(o) {
+                    return new Date(o.date);
+                }]);
 
                 // get init items
                 let rec = vm.his_items[0];
@@ -272,35 +275,31 @@ helo
 
             },
 
-//            historyRankingAnimation(){
-//                let vm = this;
-//                function oneRound(cur_index,max_index){
-//                    console.log(count);
-//                    console.log(end);
-//                    console.log("====");
-//
-//                    if (count>=end){
-//                        return
-//                    }
-//
-//                    let new_items = _.cloneDeep(vm.items);
-//                    let newVal = 0;
-//                    for (let i = 0; i < vm.items.length; i++) {
-//                        newVal = _.random(0, 200);
-//
-////                    let new_item = _.cloneDeep(this.items[i]); // use cloneDeep, or there will not be smooth!!!!!
-//                        new_items[i][vm.ranking_attr] = newVal;
-//                    }
-//
-//                    vm.replaceEntireItems(new_items);
-//
-//                    setTimeout(function () {
-//                        oneRound(++count, end);
-//                    }, 2000);
-//                }
-//
-//                oneRound(0,10);
-//            },
+            historyRankingAnimation(){
+                let vm = this;
+                function oneRound(cur_index,end_index){
+                    console.log(cur_index);
+                    console.log(end_index);
+                    console.log("====");
+
+                    if (cur_index>end_index){
+                        return
+                    }
+
+                    // get new items
+                    let rec = _.cloneDeep(vm.his_items[cur_index]);
+                    vm.my_date = rec.date;
+                    let new_items = vm.setupItemExtraInfo(rec.stats);
+
+                    vm.replaceEntireItems(new_items);
+
+                    setTimeout(function () {
+                        oneRound(++cur_index, end_index);
+                    }, 2000);
+                }
+
+                oneRound(0,vm.his_items.length-1);
+            },
 
             testCC: function () {
                 let vm = this;
