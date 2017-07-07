@@ -3,6 +3,7 @@ import requests
 import bs4
 import json
 from datetime import datetime
+import time
 
 
 def get_atp_dates(save_file=None):
@@ -65,6 +66,7 @@ def get_history_atp_rankings(since="2017-01-01", date_file=None, save_file="his_
 	# sort date desc
 	date_list.sort(key=lambda x: datetime.strptime(x, '%Y-%m-%d'), reverse=True)
 
+	scrape_count = 0
 	for my_date in date_list:
 		
 		# check if date meet since
@@ -72,6 +74,12 @@ def get_history_atp_rankings(since="2017-01-01", date_file=None, save_file="his_
 			break
 
 		print(my_date)
+
+		scrape_count+=1
+		# sleep some time to avoid banned of scraping webpage
+		if (scrape_count%20==0):
+			time.sleep(30)
+
 		his_data.append({"date": my_date, "stats": get_atp_ranking(my_date)})
 
 	# save data
@@ -85,7 +93,7 @@ def get_history_atp_rankings(since="2017-01-01", date_file=None, save_file="his_
 
 if __name__ == '__main__':
 
-	get_history_atp_rankings()
+	get_history_atp_rankings(since="2010-01-01")
 
 
 	# get_atp_ranking('2000-01-10')

@@ -136,7 +136,7 @@ helo
 
             $.getJSON("his_data.json", function(json) {
                 vm.ranking_attr = "score";
-                vm.score_zoom = 0.05;
+                vm.score_zoom = 0.03;
 
 //                vm.his_items = _.orderBy(json, [vm.date], ['asc']);
                 vm.his_items = _.sortBy(json, [function(o) {
@@ -183,7 +183,8 @@ helo
                 $.getJSON("country.json", function(json) {
 
                     items = _.map(items, function(e) {
-                        return _.extend({}, e, {flag_img: json[e.country].flag_img});
+                        let country_data = json[e.country];
+                        return _.extend({}, e, {flag_img: country_data? json[e.country].flag_img: "" });
                     });
 
                 });
@@ -295,6 +296,7 @@ helo
 
             historyRankingAnimation(){
                 let vm = this;
+
                 function oneRound(cur_index,end_index){
                     console.log(cur_index);
                     console.log(end_index);
