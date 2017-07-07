@@ -17,10 +17,10 @@ def get_atp_dates(save_file=None):
 
 	for li in path:
 		if (li.attrs.get('class')[0] != "dropdown-default-label"):
-			my_date = li.get_text().strip()
+			my_date = li.get_text().strip().replace('.','-')
 			date_list.append(my_date)
 
-	date_list.sort(key=lambda x: datetime.strptime(x, '%Y.%m.%d'), reverse=True)
+	date_list.sort(key=lambda x: datetime.strptime(x, '%Y-%m-%d'), reverse=True)
 
 	# store to json file
 	if (save_file):
