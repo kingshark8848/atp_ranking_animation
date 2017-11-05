@@ -52,13 +52,14 @@ helo
 
 <div id="flip-list-demo" class="container">
     <div class="row">
-        <div class="col-xs-12">
+        <div class="col-xs-8">
             <!-- <button v-on:click="shuffle">Shuffle</button> -->
-            <button type="button" class="btn btn-default" v-on:click="testCC">Test Change Element</button>
-            <button type="button" class="btn btn-default" v-on:click="historyRankingAnimation">History Ranking Animation</button>
-            <button type="button" class="btn btn-default" v-on:click="testReplace">Test Replace Element</button>
+            <button type="button" class="btn btn-danger" v-on:click="historyRankingAnimation">Start Animation</button>
+            <p>Click the button to see the ATP History Top10 Ranking animation!! (implemented via <span class="label label-success">Vue.js</span>, 
+                and data is grabbed from ATP official website via <span class="label label-success">Python</span> using lib <span class="label label-success">Beautiful Soup</span>)</p>
+            <!-- <button type="button" class="btn btn-default" v-on:click="testCC">Test Change Element</button> -->
+            <!-- <button type="button" class="btn btn-default" v-on:click="testReplace">Test Replace Element</button> -->
             <!-- <input v-model.number="items[0].name" type="number" step="20"> -->
-            <br/><br/>
         </div>
 
     </div>
