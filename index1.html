@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+
+<head>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style type="text/css">
+        .flip-list-item {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .flip-list-move {
+            transition: transform 0.5s;
+        }
+
+        .flip-list-enter-active, .flip-list-leave-active {
+            transition: all 0.5s;
+        }
+
+        .flip-list-enter, .flip-list-leave-to {
+            opacity: 0.2;
+            transform: translateX(30px);
+        }
+    </style>
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.14.1/lodash.min.js"></script>
+    <script src="https://unpkg.com/tween.js@16.3.4"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+
+<!-- <svg width="300" height="20">
+  <rect width="300" height="20" style="fill:rgb(0,0,255);" />
+</svg>
+helo
+<br/>
+
+<svg width="300" height="20">
+  <rect width="300" height="20" style="fill:rgb(0,0,255);" />
+</svg>
+helo
+<br/> -->
+
+<div id="flip-list-demo" class="container">
+    <div class="row">
+        <div class="col-xs-8">
+            <!-- <button v-on:click="shuffle">Shuffle</button> -->
+            <button type="button" class="btn btn-danger" v-on:click="historyRankingAnimation">Start Animation</button>
+            <p>Click the button to see the ATP History Top10 Ranking animation!! (implemented via <span class="label label-success">Vue.js</span>, 
+                and data is grabbed from ATP official website via <span class="label label-success">Python</span> using lib <span class="label label-success">Beautiful Soup</span>)</p>
+            <!-- <button type="button" class="btn btn-default" v-on:click="testCC">Test Change Element</button> -->
+            <!-- <button type="button" class="btn btn-default" v-on:click="testReplace">Test Replace Element</button> -->
+            <!-- <input v-model.number="items[0].name" type="number" step="20"> -->
+        </div>
+
+    </div>
+
+    <!--timeline info box-->
+    <div class="row">
+        <div class="col-xs-6">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Info</h3>
+                </div>
+                <div class="panel-body">
+                    Date: {{my_date}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--ranking box-->
+    <div class="row">
+        <div class="col-xs-1 text-center">
+            <div v-for="item,key in animate_items" class="row">
+                <svg :width=0 height="20">
+                </svg>
+                {{++key}}
+            </div>
+        </div>
+        <div class="col-xs-10">
+            <transition-group name="flip-list" tag="div">
+                <div v-for="item in items" v-bind:key="item.key" class="row">
+
+                    <svg :width="item[ranking_attr]*score_zoom" height="20">
+                        <rect :width="item[ranking_attr]*score_zoom" height="20" :style="{fill:item.bar_color}"/>
+                        <!-- <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle">{{item.name}}</text> -->
+                    </svg>
+
+                    <svg :width=50 height="20">
+                        <rect :width=50 height="20" style="fill:rgb(255,255,255);fill-opacity:0;"/>
+                        <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle">
+                            {{item[ranking_attr]}}
+                        </text>
+                    </svg>
+
+                    <svg height="20" width="200">
+                        <rect height="20" width="200" style="fill:rgb(253,255,159);"/>
+                        <text x="35" y="50%" alignment-baseline="middle">
+                            {{item["country"]}}, &nbsp;&nbsp;{{item["player"]}}
+                        </text>
+                        <image :href="item.flag_img" x="0" y="0" height="20" width="30"/>
+                    </svg>
+
+
+                </div>
+            </transition-group>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    new Vue({
+        el: '#flip-list-demo',
+        data: {
+            country_data: {},
+            his_items: [],
+
+            my_date: "",
+            items: [],
+            old_items: [],
+            animate_items: [],
+            ranking_attr: "",
+            score_zoom: 1,
+        },
+        mounted() {
+            let vm = this;
+
+            $.ajaxSetup({
+                async: false
+            });
+
+            // get history data
+            $.getJSON("his_data.json", function(json) {
+
+                vm.his_items = _.sortBy(json, [function(o) {
+                    return new Date(o.date);
+                }]);
+
+            });
+
+            // get country data
+            $.getJSON("country.json", function(json) {
+
+                vm.country_data = json;
+
+            });
+
+            $.ajaxSetup({
+                async: true
+            });
+
+            // set config
+            vm.ranking_attr = "score";
+            vm.score_zoom = 0.03;
+
+            // get init items
+            let rec = vm.his_items[0];
+            vm.my_date = rec.date;
+            vm.items = vm.setupItemExtraInfo(rec.stats);
+
+            // test: log items
+            console.log(vm.items);
+
+        },
+        created() {
+
+        },
+        watch: {
+            items: {
+                handler: function (after, before) {
+                    let vm = this;
+                },
+                deep: true,
+            }
+        },
+        methods: {
+            setupItemExtraInfo: function (items) {
+                let vm = this;
+
+                // init bar color
+                items = _.map(items, function(e) {
+                    return _.extend({}, e, {bar_color: "blue"});
+                });
+
+                items = _.map(items, function(e) {
+                    let country_data = vm.country_data[e.country];
+                    return _.extend({}, e, {flag_img: country_data? country_data.flag_img: "" });
+                });
+
+                return items;
+
+            },
+
+            getIndexOfRecordByKey: function (key, record) {
+                return _.findIndex(record, function (o) {
+                    return o.key === key;
+                });
+            },
+
+            replaceEntireItems: function (new_items) {
+                let vm = this;
+
+                // update
+                for (let i = 0; i < new_items.length; i++) {
+                    vm.items = _.orderBy(new_items, [vm.ranking_attr], ['desc']);
+                }
+
+            },
+
+            historyRankingAnimation(){
+                let vm = this;
+
+                for (let i = 0; i < vm.his_items.length; i++) {
+                    (function(i) {
+                        setTimeout(function() {
+                            // get new items
+                            let rec = vm.his_items[i];
+                            vm.my_date = rec.date;
+                            let new_items = vm.setupItemExtraInfo(rec.stats);
+
+                            vm.replaceEntireItems(new_items);
+
+                        }, 1500*i);
+                    })(i);
+                }
+
+            }
+
+        }
+    })
+
+</script>
+
+
+</body>
+</html>
