@@ -89,7 +89,7 @@ helo
         </div>
         <div class="col-xs-10">
             <transition-group name="flip-list" tag="div">
-                <div v-for="item in items" v-bind:key="item.key" class="row">
+                <div v-for="item in animate_items" v-bind:key="item.key" class="row">
 
                     <svg :width="item[ranking_attr]*score_zoom" height="20">
                         <rect :width="item[ranking_attr]*score_zoom" height="20" :style="{fill:item.bar_color}"/>
@@ -172,6 +172,8 @@ helo
             // test: log items
             console.log(vm.items);
 
+            vm.setValue();
+
         },
         created() {
 
@@ -180,6 +182,9 @@ helo
             items: {
                 handler: function (after, before) {
                     let vm = this;
+                    // Log it
+                    vm.setValue();
+                    // console.log(changed)
                 },
                 deep: true,
             }
@@ -208,12 +213,93 @@ helo
                 });
             },
 
-            replaceEntireItems: function (new_items) {
+            setValue: function () {
+//                this.$data.old_items = _.cloneDeep(this.$data.items);
+//                this.$data.animate_items = _.cloneDeep(this.$data.items);
+                this.$data.old_items = this.$data.items;
+                this.$data.animate_items = this.$data.items;
+            },
+            shuffle: function () {
+                this.items = _.shuffle(this.items)
+            },
+
+            updateItemWithAnimation: function (new_item, completed_callback) {
+
+                let key = new_item.key;
+
+                let vm = this;
+                let index = vm.getIndexOfRecordByKey(key, vm.items);
+
+                if (index_bak === -1) {
+//                    console.log(key);
+                    // not in old item.
+                    completed_callback(-1);
+                    return
+                }
+
+                if (vm.items[index_bak][vm.ranking_attr]===new_item[vm.ranking_attr]){
+                    // value not changed
+//                    console.log(key);
+                    completed_callback(0);
+                    return;
+                }
+
+                // when update start, change bar color to red temp.
+                let old_color = new_item.bar_color;
+                new_item.bar_color = "red";
+
+                // setup tween
+                let mid_item = _.cloneDeep(new_item);
+                let tween = new TWEEN.Tween({tweeningNumber: parseInt(vm.old_items[index_bak][vm.ranking_attr]) })
+//                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .to({tweeningNumber: parseInt(new_item[vm.ranking_attr]) }, 500)
+                    .onUpdate(function () {
+                        mid_item[vm.ranking_attr] = this.tweeningNumber.toFixed(0);
+                        vm.$set(vm.animate_items, index_bak, mid_item)
+
+                    })
+                    .start()
+                    .onComplete(function () {
+                        // when animation is over, recover bar color
+                        new_item.bar_color = old_color;
+
+                        // SET NEW VALUE
+//                        console.log(key);
+//                        vm.$set(vm.items, index, new_item); // need to be here not outside the new TWEEN structure cuz ansync reason.
+                        completed_callback(1);
+                    });
+
+                // define animation function
+                function animate(time) {
+
+                    requestAnimationFrame(animate);
+                    TWEEN.update(time);
+                    tween = null;
+                }
+
+                // begin to do value updating animation
+                animate();
+
+            },
+
+            replaceEntireItems: function (new_items, callback) {
                 let vm = this;
 
+                let tmp_items = new_items;
+
                 // update
+                let updated_count = 0;
                 for (let i = 0; i < new_items.length; i++) {
-                    vm.items = _.orderBy(new_items, [vm.ranking_attr], ['desc']);
+                    vm.updateItemWithAnimation(new_items[i], function (result) {
+                        updated_count++;
+
+                        if (updated_count>=new_items.length){
+                            // move
+                            vm.items = _.orderBy(tmp_items, [vm.ranking_attr], ['desc']); // set value, trigger list move,enter,leave event
+                            typeof callback === 'function' && callback(0);
+                        }
+
+                    })
                 }
 
             },
@@ -225,6 +311,7 @@ helo
                     (function(i) {
                         setTimeout(function() {
                             // get new items
+//                            let rec = _.cloneDeep(vm.his_items[i]);
                             let rec = vm.his_items[i];
                             vm.my_date = rec.date;
                             let new_items = vm.setupItemExtraInfo(rec.stats);
@@ -235,6 +322,98 @@ helo
                     })(i);
                 }
 
+            },
+
+            historyRankingAnimation_v2(){
+                let vm = this;
+
+                function oneRound(cur_index,end_index){
+
+                    if (cur_index>end_index){
+                        return
+                    }
+
+                    // get new items
+                    let rec = vm.his_items[cur_index];
+                    vm.my_date = rec.date;
+                    let new_items = vm.setupItemExtraInfo(rec.stats);
+
+                    vm.replaceEntireItems(new_items);
+
+                    setTimeout(function () {
+                        oneRound(++cur_index, end_index);
+                    }, 1500);
+                }
+
+                oneRound(0,vm.his_items.length-1);
+            },
+
+            testCC: function () {
+                let vm = this;
+
+                let new_items = _.cloneDeep(this.items);
+                let newVal = 0;
+                for (let i = 0; i < this.items.length; i++) {
+                    newVal = _.random(0, 200);
+
+//                    let new_item = _.cloneDeep(this.items[i]); // use cloneDeep, or there will not be smooth!!!!!
+                    new_items[i][vm.ranking_attr] = newVal;
+                }
+
+                vm.replaceEntireItems(new_items);
+
+
+            },
+
+            testTimeLine: function () {
+
+                let vm = this;
+                function oneRound(count,end){
+                    console.log(count);
+                    console.log(end);
+                    console.log("====");
+
+                    if (count>=end){
+                        return
+                    }
+
+                    let new_items = _.cloneDeep(vm.items);
+                    let newVal = 0;
+                    for (let i = 0; i < vm.items.length; i++) {
+                        newVal = _.random(0, 200);
+
+//                    let new_item = _.cloneDeep(this.items[i]); // use cloneDeep, or there will not be smooth!!!!!
+                        new_items[i][vm.ranking_attr] = newVal;
+                    }
+
+                    vm.replaceEntireItems(new_items);
+
+                    setTimeout(function () {
+                        oneRound(++count, end);
+                    }, 2000);
+                }
+
+                oneRound(0,10);
+
+            },
+
+            testReplace: function () {
+                // this.items.splice(_.random(0,7), 1)
+                test_items = [
+                    {key: 1, goal: 80},
+                    {key: 2, goal: 70},
+                    {key: 3, goal: 100},
+                    {key: 4, goal: 50},
+                    {key: 9, goal: 120},
+                    {key: 13, goal: 30},
+                    {key: 7, goal: 20},
+                    {key: 8, goal: 75},
+                    {key: 11, goal: 32},
+                ];
+
+                test_items = this.setupItemExtraInfo(test_items);
+
+                this.replaceEntireItems(test_items);
             }
 
         }
