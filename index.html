@@ -218,34 +218,37 @@ helo
                 /*show each player's ranking_attr change smoothly*/
                 let flag = 0;
                 for (let i = 0; i < new_items.length; i++) {
+                    let new_item = new_items[i];
+                    let key = new_item.key;
 
-                    let key = new_items[i].key;
+                    let cur_item = vm.getItemByKey(key, vm.items);
 
-                    let cur_item_index = vm.getIndexOfItemByKey(key, vm.items);
-
-                    if (cur_item_index===-1){/*new player is not in current player lists*/
+                    if (!cur_item){/*new player is not in current player lists*/
                         flag ++;
                         continue;
                     }
 
-                    let old_color = new_items[i].bar_color;
-                    if (parseInt(vm.items[cur_item_index][vm.ranking_attr])!==parseInt(new_items[i][vm.ranking_attr])){
-                        vm.items[cur_item_index].bar_color = "red";
+                    let old_color = new_item.bar_color;
+                    let cur_item_score = parseInt(cur_item[vm.ranking_attr]);
+                    let new_item_score = parseInt(new_item[vm.ranking_attr]);
+
+                    if (cur_item_score!==new_item_score){
+                        cur_item.bar_color = "red";
                     }
 
 
-                    let tween = new TWEEN.Tween({tweenRankingAttr: parseInt(vm.items[cur_item_index][vm.ranking_attr]) })
-                    //                    .easing(TWEEN.Easing.Quadratic.Out)
-                        .to({tweenRankingAttr: parseInt(new_items[i][vm.ranking_attr]) }, 500)
+                    let tween = new TWEEN.Tween({tweenRankingAttr: cur_item_score })
+//                        .easing(TWEEN.Easing.Quadratic.Out)
+                        .to({tweenRankingAttr: new_item_score }, 500)
                         .onUpdate(function () {
-                            vm.items[cur_item_index][vm.ranking_attr] = this.tweenRankingAttr.toFixed(0);
+                            cur_item[vm.ranking_attr] = this.tweenRankingAttr.toFixed(0);
                         })
                         .start()
                         .onComplete(function () {
                             flag++;
 
                             /*when animation is over, recover bar color*/
-                            vm.items[cur_item_index].bar_color = old_color;
+                            cur_item.bar_color = old_color;
 
                             /*check if all tween completed*/
                             if (flag===new_items.length){
