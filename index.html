@@ -221,34 +221,34 @@ helo
 
                     let key = new_items[i].key;
 
-                    if (!vm.getItemByKey(key, vm.items)){/*new player is not in current player lists*/
+                    let cur_item_index = vm.getIndexOfItemByKey(key, vm.items);
+
+                    if (cur_item_index===-1){/*new player is not in current player lists*/
                         flag ++;
                         continue;
                     }
 
                     let old_color = new_items[i].bar_color;
-                    if (parseInt(vm.items[i][vm.ranking_attr])!==parseInt(new_items[i][vm.ranking_attr])){
-                        vm.items[i].bar_color = "red";
+                    if (parseInt(vm.items[cur_item_index][vm.ranking_attr])!==parseInt(new_items[i][vm.ranking_attr])){
+                        vm.items[cur_item_index].bar_color = "red";
                     }
 
 
-                    let tween = new TWEEN.Tween({tweenRankingAttr: parseInt(vm.items[i][vm.ranking_attr]) })
+                    let tween = new TWEEN.Tween({tweenRankingAttr: parseInt(vm.items[cur_item_index][vm.ranking_attr]) })
                     //                    .easing(TWEEN.Easing.Quadratic.Out)
                         .to({tweenRankingAttr: parseInt(new_items[i][vm.ranking_attr]) }, 500)
                         .onUpdate(function () {
-                            vm.items[i][vm.ranking_attr] = this.tweenRankingAttr.toFixed(0);
+                            vm.items[cur_item_index][vm.ranking_attr] = this.tweenRankingAttr.toFixed(0);
                         })
                         .start()
                         .onComplete(function () {
                             flag++;
 
                             /*when animation is over, recover bar color*/
-                            vm.items[i].bar_color = old_color;
+                            vm.items[cur_item_index].bar_color = old_color;
 
                             /*check if all tween completed*/
                             if (flag===new_items.length){
-                                console.log(flag);
-
                                 /*update entire*/
                                 vm.items = _.orderBy(new_items, [vm.ranking_attr], ['desc']);
                             }
