@@ -140,6 +140,9 @@ helo
             items: [],
             ranking_attr: "",
             score_zoom: 1,
+
+            tween_time: 500,
+            date_change_interval: 1500
         },
         mounted() {
             let vm = this;
@@ -249,7 +252,7 @@ helo
 
                     let tween = new TWEEN.Tween({tweenRankingAttr: cur_item_score })
 //                        .easing(TWEEN.Easing.Quadratic.Out)
-                        .to({tweenRankingAttr: new_item_score }, 500)
+                        .to({tweenRankingAttr: new_item_score }, vm.tween_time)
                         .onUpdate(function () {
                             cur_item[vm.ranking_attr] = this.tweenRankingAttr.toFixed(0);
                         })
@@ -298,7 +301,7 @@ helo
 
                             vm.replaceEntireItems(new_items);
 
-                        }, 1500*i);
+                        }, vm.date_change_interval*i);
                     })(i);
                 }
 
