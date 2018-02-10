@@ -84,6 +84,8 @@ def get_history_atp_rankings(since="2017-01-01", date_file=None, save_file="his_
 
 	# save data
 	if save_file:
+		save_file = save_file + str(int(time.time()));
+
 		with open(save_file, 'w') as fp:
 			json.dump(his_data, fp)
 
@@ -93,7 +95,7 @@ def get_history_atp_rankings(since="2017-01-01", date_file=None, save_file="his_
 
 if __name__ == '__main__':
 
-	get_history_atp_rankings(since="2010-01-01")
+	get_history_atp_rankings(since="2017-01-01")
 
 
 	# get_atp_ranking('2000-01-10')

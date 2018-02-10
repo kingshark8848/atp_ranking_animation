@@ -50,19 +50,6 @@
 
 <body>
 
-
-<!-- <svg width="300" height="20">
-  <rect width="300" height="20" style="fill:rgb(0,0,255);" />
-</svg>
-helo
-<br/>
-
-<svg width="300" height="20">
-  <rect width="300" height="20" style="fill:rgb(0,0,255);" />
-</svg>
-helo
-<br/> -->
-
 <div id="flip-list-demo" class="container">
     <div class="row">
         <div class="col-xs-8">
@@ -133,6 +120,8 @@ helo
     new Vue({
         el: '#flip-list-demo',
         data: {
+            tennis_data_api_url: 'http://tennis-api.kingsharkworld.com:8080',
+
             country_data: {},
             his_items: [],
 
@@ -149,6 +138,11 @@ helo
 
             $.ajaxSetup({
                 async: false
+            });
+
+            /* connect to tennis-api */
+            $.get( vm.tennis_data_api_url+'/', function( data ) {
+                console.log(data);
             });
 
             /*get history data*/

@@ -1,0 +1,29 @@
+CREATE TABLE atp_ranking_date( 
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+	d_date DATE NOT NULL UNIQUE
+);
+
+CREATE TABLE tennis_players( 
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    name VARCHAR(100) NOT NULL UNIQUE,
+    country_code VARCHAR(5) NOT NULL,
+    potrait_url VARCHAR,
+    FOREIGN KEY (country_code) REFERENCES countries(country_code) ON DELETE SET NULL ON UPDATE CASCADE
+); 
+
+CREATE TABLE countries(
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	country_code VARCHAR(5) NOT NULL UNIQUE,
+	flag_img_url VARCHAR
+);
+
+CREATE TABLE atp_ranking_history( 
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    d_date DATE UNIQUE NOT NULL, 
+    player_name VARCHAR(100),
+    ranking INT NOT NULL, 
+    score INT NOT NULL,
+    FOREIGN KEY (d_date) REFERENCES atp_ranking_date(d_date) ON DELETE NO ACTION ON UPDATE CASCADE,
+    FOREIGN KEY (player_name) REFERENCES tennis_players(name) ON DELETE NO ACTION ON UPDATE CASCADE
+);
+
