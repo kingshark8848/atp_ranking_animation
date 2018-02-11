@@ -121,6 +121,8 @@
     new Vue({
         el: '#flip-list-demo',
         data: {
+            debug_mode: 0,
+
             tennis_data_api_url: 'http://tennis-api.kingsharkworld.com',
 
             country_data: {},
@@ -174,9 +176,11 @@
             vm.animation_status = 0;
 
             /*get init items*/
-            let rec = vm.his_items[0];
-            vm.my_date = rec.date;
-            vm.items = vm.setupItemExtraInfo(rec.stats);
+            vm.clearCurItem();
+
+            // let rec = vm.his_items[0];
+            // vm.my_date = rec.date;
+            // vm.items = vm.setupItemExtraInfo(rec.stats);
 
 //            /*test: log items*/
 //            console.log(vm.items);
@@ -211,6 +215,12 @@
 
             },
 
+            toDebug: function (msg) {
+                if (this.debug_mode===1){
+                    console.log(msg);
+                }
+            },
+
             getIndexOfItemByKey: function (key, record) {
                 return _.findIndex(record, function (o) {
                     return o.key === key;
@@ -221,6 +231,12 @@
                 return _.find(record, function (o) {
                     return o.key === key;
                 });
+            },
+
+            clearCurItem: function () {
+                /*get init items*/
+                this.my_date = "";
+                this.items = [];
             },
 
             replaceEntireItems: function (new_items) {
@@ -279,13 +295,23 @@
 
                 }
 
-                Promise.all(promiseList).then(function(values) {
+                return new Promise((resolve, reject)=>{
+                    Promise.all(promiseList).then(function(values) {
 
-                    // /*debug*/
-                    // console.log('tween finished');
+                        vm.toDebug('tween finished');
 
-                    /*update entire*/
-                    vm.items = _.orderBy(new_items, [vm.ranking_attr], ['desc']);
+                        /*update entire*/
+                        vm.items = _.orderBy(new_items, [vm.ranking_attr], ['desc']);
+
+                        /*waiting...for another date*/
+                        setTimeout(()=>{
+                            vm.toDebug('waiting...for another date');
+
+                            resolve('one time load completed!');
+                        },vm.date_change_interval);
+
+                    });
+
                 });
 
 
@@ -293,39 +319,53 @@
 
             historyRankingAnimation(){
                 let vm = this;
-                /*change status to 1:running*/
-                vm.animation_status = 1;
 
-                for (let i = 0; i < vm.his_items.length; i++) {
-                    console.log(vm.animation_status);
-
-                    if (vm.animation_status===-1){
-                        break;
-                    }
-
-                    (function(i) {
-                        setTimeout(function() {
-                            // get new items
-                            let rec = vm.his_items[i];
-                            vm.my_date = rec.date;
-                            let new_items = vm.setupItemExtraInfo(rec.stats);
-
-                            vm.replaceEntireItems(new_items);
-
-                        }, vm.date_change_interval*i);
-                    })(i);
+                if (vm.animation_status===1){
+                    console.log('animation already run!');
+                    return;
                 }
 
-                /*change status to 0:stopped*/
-                vm.animation_status = 0;
+                (async function loop() {
+                    /*change status to 1:running*/
+                    vm.toDebug('enter loop');
+                    vm.animation_status = 1;
+
+                    for (let i = 0; i < vm.his_items.length; i++) {
+                        if (vm.animation_status===-1){
+                            break;
+                        }
+
+                        // get new items
+                        let rec = vm.his_items[i];
+                        vm.my_date = rec.date;
+                        let new_items = vm.setupItemExtraInfo(rec.stats);
+
+                        vm.toDebug('new date: '+vm.my_date);
+                        vm.toDebug('animation status: '+vm.animation_status);
+
+                        /*single date animation*/
+                        let promise = vm.replaceEntireItems(new_items);
+
+                        await promise.then(
+                            (data) => {
+                                vm.toDebug('animation resolved msg:'+data);
+                            });
+
+                    }
+
+                    /*change status to 0:stopped*/
+                    vm.animation_status = 0;
+                    vm.clearCurItem();
+                    console.log('animation finished');
+
+                })();
 
             },
 
             stopHistoryRankingAnimation: function () {
                 let vm = this;
 
-                /*debug*/
-                console.log('stop button clicked');
+                vm.toDebug('stop button clicked');
 
                 /* set animation_status => -1: to be stopped */
                 vm.animation_status = -1;
