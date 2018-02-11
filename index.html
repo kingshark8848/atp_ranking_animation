@@ -136,7 +136,7 @@
             // 0: stopped, 1: running, -1: to be stopped
             animation_status: 0,
             tween_time: 500,
-            date_change_interval: 1500
+            date_change_interval: 1000
         },
         mounted() {
             let vm = this;
@@ -264,7 +264,7 @@
 
                     let promise = new Promise(function(resolve, reject) {
                         let tween = new TWEEN.Tween({tweenRankingAttr: cur_item_score })
-                        //                        .easing(TWEEN.Easing.Quadratic.Out)
+                            // .easing(TWEEN.Easing.Quadratic.Out)
                             .to({tweenRankingAttr: new_item_score }, vm.tween_time)
                             .onUpdate(function () {
                                 cur_item[vm.ranking_attr] = this.tweenRankingAttr.toFixed(0);
