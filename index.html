@@ -54,8 +54,9 @@
     <div class="row">
         <div class="col-xs-8">
             <!-- <button v-on:click="shuffle">Shuffle</button> -->
-            <button type="button" class="btn btn-danger" v-on:click="historyRankingAnimation">Start Animation</button>
-            <p>Click the button to see the ATP History Top10 Ranking animation!! (implemented via <span class="label label-success">Vue.js</span>, 
+            <button type="button" class="btn btn-primary" v-on:click="historyRankingAnimation">Start Animation</button>
+            <button type="button" class="btn btn-danger" v-on:click="stopHistoryRankingAnimation">Stop Animation</button>
+            <p>Click the button to see the ATP History Top10 Ranking animation!! (implemented via <span class="label label-success">Vue.js</span>,
                 and data is grabbed from ATP official website via <span class="label label-success">Python</span> using lib <span class="label label-success">Beautiful Soup</span>)</p>
             <!-- <button type="button" class="btn btn-default" v-on:click="testCC">Test Change Element</button> -->
             <!-- <button type="button" class="btn btn-default" v-on:click="testReplace">Test Replace Element</button> -->
@@ -130,6 +131,8 @@
             ranking_attr: "",
             score_zoom: 1,
 
+            // 0: stopped, 1: running, -1: to be stopped
+            animation_status: 0,
             tween_time: 500,
             date_change_interval: 1500
         },
@@ -168,6 +171,7 @@
             /*set config*/
             vm.ranking_attr = "score";
             vm.score_zoom = 0.03;
+            vm.animation_status = 0;
 
             /*get init items*/
             let rec = vm.his_items[0];
@@ -223,7 +227,7 @@
                 let vm = this;
 
                 /*show each player's ranking_attr change smoothly*/
-                let flag = 0;
+                let promiseList = [];
                 for (let i = 0; i < new_items.length; i++) {
                     let new_item = new_items[i];
                     let key = new_item.key;
@@ -231,7 +235,6 @@
                     let cur_item = vm.getItemByKey(key, vm.items);
 
                     if (!cur_item){/*new player is not in current player lists*/
-                        flag ++;
                         continue;
                     }
 
@@ -243,49 +246,63 @@
                         cur_item.bar_color = "red";
                     }
 
+                    let promise = new Promise(function(resolve, reject) {
+                        let tween = new TWEEN.Tween({tweenRankingAttr: cur_item_score })
+                        //                        .easing(TWEEN.Easing.Quadratic.Out)
+                            .to({tweenRankingAttr: new_item_score }, vm.tween_time)
+                            .onUpdate(function () {
+                                cur_item[vm.ranking_attr] = this.tweenRankingAttr.toFixed(0);
+                            })
+                            .start()
+                            .onComplete(function () {
+                                /*when animation is over, recover bar color*/
+                                cur_item.bar_color = old_color;
 
-                    let tween = new TWEEN.Tween({tweenRankingAttr: cur_item_score })
-//                        .easing(TWEEN.Easing.Quadratic.Out)
-                        .to({tweenRankingAttr: new_item_score }, vm.tween_time)
-                        .onUpdate(function () {
-                            cur_item[vm.ranking_attr] = this.tweenRankingAttr.toFixed(0);
-                        })
-                        .start()
-                        .onComplete(function () {
-                            flag++;
+                                /*promise resolved*/
+                                return resolve(true);
+                            });
 
-                            /*when animation is over, recover bar color*/
-                            cur_item.bar_color = old_color;
+                        /*define animation function*/
+                        function animate(time) {
 
-                            /*check if all tween completed*/
-                            if (flag===new_items.length){
-                                /*update entire*/
-                                vm.items = _.orderBy(new_items, [vm.ranking_attr], ['desc']);
-                            }
-                        });
+                            requestAnimationFrame(animate);
+                            TWEEN.update(time);
+                            tween = null;
+                        }
 
-                    /*define animation function*/
-                    function animate(time) {
+                        /*begin to do value updating animation*/
+                        animate();
+                    });
 
-                        requestAnimationFrame(animate);
-                        TWEEN.update(time);
-                        tween = null;
-                    }
-
-                    /*begin to do value updating animation*/
-                    animate();
-
+                    promiseList.push(promise);
 
 
                 }
+
+                Promise.all(promiseList).then(function(values) {
+
+                    // /*debug*/
+                    // console.log('tween finished');
+
+                    /*update entire*/
+                    vm.items = _.orderBy(new_items, [vm.ranking_attr], ['desc']);
+                });
 
 
             },
 
             historyRankingAnimation(){
                 let vm = this;
+                /*change status to 1:running*/
+                vm.animation_status = 1;
 
                 for (let i = 0; i < vm.his_items.length; i++) {
+                    console.log(vm.animation_status);
+
+                    if (vm.animation_status===-1){
+                        break;
+                    }
+
                     (function(i) {
                         setTimeout(function() {
                             // get new items
@@ -299,8 +316,20 @@
                     })(i);
                 }
 
-            }
+                /*change status to 0:stopped*/
+                vm.animation_status = 0;
 
+            },
+
+            stopHistoryRankingAnimation: function () {
+                let vm = this;
+
+                /*debug*/
+                console.log('stop button clicked');
+
+                /* set animation_status => -1: to be stopped */
+                vm.animation_status = -1;
+            }
         }
     })
 
